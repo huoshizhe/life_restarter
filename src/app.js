@@ -218,4 +218,5 @@ const character = new Character(3, 5, 7, 9);
 setInterval(() => {
   character.chooseCard();
   document.writeln(character.msgList[character.msgList.length - 1]);
+  document.writeln('<br>');
 }, 1000);
