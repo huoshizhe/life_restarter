@@ -97,8 +97,13 @@ class Character {
     const choosenCard = cards[RandomInt(cards.length)];
     this.getCardList.push(choosenCard);
     this.age++;
-    console.log(`${this.age}岁：${choosenCard.text}`);
+    choosenCard.executeAction(character);
+    const msg = `${this.age}岁：${choosenCard.text}`;
+    this.msgList.push(msg);
+
+    console.log(msg);
   }
+  msgList = [];
 }
 
 class Card {
@@ -109,7 +114,7 @@ class Card {
   actions; // 结果
   text; // 输出文字
 
-  constructor({ fileName, group, name, conditionStr, actionStr, text }) {
+  constructor({ fileName, group, name, conditionStr = '', actionStr = '', text = '' }) {
     this.fileName = fileName;
     this.group = group;
     this.name = name;
@@ -123,8 +128,6 @@ class Card {
         const right = str.split(sign)[1];
         return { sign, left, right };
       });
-
-    console.log('this.conditions = ' + JSON.stringify(this.conditions));
 
     this.actions = actionStr
       .split(' ')
@@ -177,27 +180,31 @@ class Card {
   }
 
   executeAction(character) {
-    if (condition.left == '死亡') {
-      // TODO: 
-      return;
-    }
+    this.actions.forEach(action => {
+      if (action.left == '') {
+        return;
+      }
+      if (action.left == '死亡') {
+        // TODO: 
+        return;
+      }
 
-    let rightNumber = parseFloat(condition.right);
-    if (isNaN(rightNumber)) {
-      rightNumber = character.getProp(condition.right);
-    }
-    let leftNumber = character.getProp(condition.left);
+      let rightNumber = parseFloat(action.right);
+      if (isNaN(rightNumber)) {
+        rightNumber = character.getProp(action.right);
+      }
 
-    switch (condition.sign) {
-      case "+":
-        character.setProp(leftNumber, rightNumber);
-        break;
-      case "-":
-        character.setProp(leftNumber, -rightNumber);
-        break;
-      default:
-        break;
-    }
+      switch (action.sign) {
+        case "+":
+          character.setProp(action.left, rightNumber);
+          break;
+        case "-":
+          character.setProp(action.left, -rightNumber);
+          break;
+        default:
+          break;
+      }
+    });
   }
 }
 
@@ -210,4 +217,7 @@ function RandomInt(a, b = 0) {
 const character = new Character(3, 5, 7, 9);
 setInterval(() => {
   character.chooseCard();
+  character.msgList.forEach(msg => {
+    document.writeln(msg);
+  });
 }, 1000);

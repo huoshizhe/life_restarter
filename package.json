@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node ./src/app.js"
+    "test": "node ./src/app.js",
+    "load": "node ./src/dataLoader.js"
   },
   "repository": {
     "type": "git",
@@ -17,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/huoshizhe/life_restarter/issues"
   },
-  "homepage": "https://github.com/huoshizhe/life_restarter#readme"
+  "homepage": "https://github.com/huoshizhe/life_restarter#readme",
+  "dependencies": {
+    "node-xlsx": "^0.17.1"
+  }
 }
