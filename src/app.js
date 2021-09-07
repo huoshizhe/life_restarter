@@ -217,7 +217,5 @@ function RandomInt(a, b = 0) {
 const character = new Character(3, 5, 7, 9);
 setInterval(() => {
   character.chooseCard();
-  character.msgList.forEach(msg => {
-    document.writeln(msg);
-  });
+  document.writeln(character.msgList[character.msgList.length - 1]);
 }, 1000);
