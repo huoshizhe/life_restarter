@@ -28,7 +28,7 @@ class Character {
     this.allCardList = AllCardList.map(cardData => {
       return {
         fileName: cardData.fileName,
-        group: cardData.fileName,
+        group: cardData.groupName,
         name: cardData.name,
         conditionStr: cardData.conditions,
         actionStr: cardData.actions,
@@ -63,52 +63,93 @@ class Character {
   setProp(name, value) {
     switch (name) {
       case "财富":
-        this.wealth += value;
+        this.wealth = value;
         break;
       case "魅力":
-        this.charm += value;
+        this.charm = value;
         break;
       case "智力":
-        this.intelligence += value;
+        this.intelligence = value;
         break;
       case "体质":
-        this.physical += value;
+        this.physical = value;
         break;
       case "性别":
-        this.gender += value;
+        this.gender = value;
         break;
       case "年龄":
-        this.age += value;
+        this.age = value;
         break;
       case "幸运":
-        this.lucky += value;
+        this.lucky = value;
         break;
       case "意志":
-        this.will += value;
+        this.will = value;
         break;
       default:
         throw "错误的类型:" + name;
     }
   }
 
+  chooseCardGroup(leftstr, rightstr, fileName) {
+    switch (leftstr) {
+      case "加入卡组":
+        this.addCardGroup(rightstr, fileName);
+        break;
+      case "移除卡组":
+      case "删除卡组":
+        this.removeCardGroup(rightstr, fileName);
+        break;
+      default:
+        break;
+    }
+  }
+
+  addCardGroup(groupName, fileName) {
+    this.cardGroups.push({
+      fileName: groupName,
+      groupName: fileName
+    });
+  }
+
+  removeCardGroup(groupName, fileName) {
+    const idx = this.cardGroups.findIndex(data => {
+      return data.groupName == groupName && data.fileName == fileName;
+    });
+    if (idx != -1) {
+      this.cardGroups.splice(idx, 1);
+    }
+  }
+
+  cardGroups = [];
   getCardList = [];
   chooseCard() {
-    const cards = this.allCardList.filter(card => card.check(this));
+    const cards = this.allCardList
+      .filter(card => {
+        return ['', '普通事件'].includes(card.groupName)
+          || this.cardGroups.some(groupData => {
+            return (card.fileName == groupData.fileName
+              && card.groupName == groupData.groupName);
+          });
+      })
+      .filter(card => card.check(this));
     const choosenCard = cards[RandomInt(cards.length)];
     this.getCardList.push(choosenCard);
     this.age++;
-    choosenCard.executeAction(character);
+    const result = choosenCard.executeAction(character);
     const msg = `${this.age}岁：${choosenCard.text}`;
     this.msgList.push(msg);
 
     console.log(msg);
+
+    return result;
   }
   msgList = [];
 }
 
 class Card {
   fileName; // 文件名
-  group; // 组
+  groupName; // 组
   name; // 名字
   conditions; // 条件
   actions; // 结果
@@ -116,13 +157,13 @@ class Card {
 
   constructor({ fileName, group, name, conditionStr = '', actionStr = '', text = '' }) {
     this.fileName = fileName;
-    this.group = group;
+    this.groupName = group;
     this.name = name;
     this.text = text;
     this.conditions = conditionStr
       .split(' ')
       .map(str => {
-        const signs = ["<=", ">=", "!=", "=", "<", ">"];
+        const signs = ["<=", "《=", ">=", "》=", "!=", "！=", "=", "<", "《", ">", "》"];
         const sign = signs.find(sign => str.includes(sign));
         const left = str.split(sign)[0];
         const right = str.split(sign)[1];
@@ -132,7 +173,7 @@ class Card {
     this.actions = actionStr
       .split(' ')
       .map(str => {
-        const signs = ["+", "-"];
+        const signs = ["+", "-", "=", ":", "："];
         const sign = signs.find(sign => str.includes(sign));
         const left = str.split(sign)[0];
         const right = str.split(sign)[1];
@@ -162,15 +203,20 @@ class Card {
 
       switch (condition.sign) {
         case "<":
+        case "《":
           return leftNumber < rightNumber;
         case ">":
+        case "》":
           return leftNumber > rightNumber;
         case "<=":
+        case "《=":
           return leftNumber <= rightNumber;
         case ">=":
+        case "》=":
           return leftNumber >= rightNumber;
         case "=":
           return leftNumber == rightNumber;
+        case "！=":
         case "!=":
           return leftNumber != rightNumber;
         default:
@@ -185,7 +231,6 @@ class Card {
         return;
       }
       if (action.left == '死亡') {
-        // TODO: 
         return;
       }
 
@@ -194,17 +239,29 @@ class Card {
         rightNumber = character.getProp(action.right);
       }
 
+      let leftNumber = character.getProp(action.left);
+
       switch (action.sign) {
         case "+":
-          character.setProp(action.left, rightNumber);
+          character.setProp(action.left, leftNumber + rightNumber);
           break;
         case "-":
-          character.setProp(action.left, -rightNumber);
+          character.setProp(action.left, leftNumber - rightNumber);
           break;
+        case "=":
+          character.setProp(action.left, rightNumber);
+          break;
+        case ":":
+        case "：":
+        // character.
         default:
           break;
       }
     });
+
+    if (this.actions.some(action => action.left == '死亡')) {
+      return true;
+    };
   }
 }
 
@@ -214,9 +271,20 @@ function RandomInt(a, b = 0) {
   return Math.floor(Math.random() * (max - min) + min);
 }
 
-const character = new Character(3, 5, 7, 9);
-setInterval(() => {
-  character.chooseCard();
-  document.writeln(character.msgList[character.msgList.length - 1]);
-  document.writeln('<br>');
+const character = new Character(
+  RandomInt(11),
+  RandomInt(11),
+  RandomInt(11),
+  RandomInt(11)
+);
+
+const interval = setInterval(() => {
+  const result = character.chooseCard();
+  if (typeof (document) != 'undefined') {
+    document.writeln(character.msgList[character.msgList.length - 1]);
+    document.writeln('<br>');
+  }
+  if (result) {
+    clearInterval(interval);
+  }
 }, 1000);
