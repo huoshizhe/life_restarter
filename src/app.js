@@ -215,6 +215,7 @@ function RandomInt(a, b = 0) {
 }
 
 const character = new Character(3, 5, 7, 9);
+document.writeln(`<a src="./cocos/index.html">cocos</a>`);
 setInterval(() => {
   character.chooseCard();
   document.writeln(character.msgList[character.msgList.length - 1]);
